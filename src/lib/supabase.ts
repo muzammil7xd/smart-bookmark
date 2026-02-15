@@ -1,8 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
 // Check if credentials are properly configured
 export const isSupabaseConfigured = () => {
   return !!(
@@ -16,7 +13,10 @@ let supabaseClient: SupabaseClient | null = null;
 // Lazy initialize client only when credentials are available
 export const getSupabaseClient = (): SupabaseClient => {
   if (!supabaseClient) {
-    // Use provided credentials or dummy values during build
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    // Provide dummy values only during build time (SSR)
     const url = supabaseUrl || 'https://placeholder.supabase.co';
     const key = supabaseAnonKey || 'placeholder-key';
 
