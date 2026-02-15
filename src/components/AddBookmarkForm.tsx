@@ -66,7 +66,7 @@ export default function AddBookmarkForm({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g., GitHub"
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900 placeholder-gray-400"
             disabled={isSubmitting || isLoading}
           />
         </div>
@@ -81,7 +81,7 @@ export default function AddBookmarkForm({
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="e.g., https://github.com"
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900 placeholder-gray-400"
             disabled={isSubmitting || isLoading}
           />
         </div>
