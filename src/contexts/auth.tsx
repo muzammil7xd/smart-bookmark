@@ -34,10 +34,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        const { data } = await supabase.auth.getSession();
-        setUser(data.session?.user ?? null);
+        try {
+          const { data } = await supabase.auth.getSession();
+          setUser(data?.session?.user ?? null);
+        } catch (authError) {
+          console.error('Error getting session:', authError);
+          setError('Unable to connect to Supabase');
+        }
       } catch (err) {
-        console.error('Error getting session:', err);
+        console.error('Error initializing auth:', err);
         setError(err instanceof Error ? err.message : 'Error initializing auth');
       } finally {
         setLoading(false);
@@ -46,16 +51,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initializeAuth();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
+    try {
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      );
 
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
+    } catch (error) {
+      console.error('Error setting up auth listener:', error);
+      setLoading(false);
+    }
   }, []);
 
   const signInWithGoogle = async () => {

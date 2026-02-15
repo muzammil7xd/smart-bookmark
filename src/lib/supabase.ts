@@ -1,11 +1,17 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+// Get environment variables
+const getSupabaseCredentials = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  return { url, key };
+};
+
 // Check if credentials are properly configured
 export const isSupabaseConfigured = () => {
-  return !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  const { url, key } = getSupabaseCredentials();
+  return !!(url && key && typeof url === 'string' && typeof key === 'string');
 };
 
 let supabaseClient: SupabaseClient | null = null;
@@ -13,20 +19,25 @@ let supabaseClient: SupabaseClient | null = null;
 // Lazy initialize client only when credentials are available
 export const getSupabaseClient = (): SupabaseClient => {
   if (!supabaseClient) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const { url, key } = getSupabaseCredentials();
 
-    // Provide dummy values only during build time (SSR)
-    const url = supabaseUrl || 'https://placeholder.supabase.co';
-    const key = supabaseAnonKey || 'placeholder-key';
+    // Use credentials if available, otherwise use placeholders for build
+    const supabaseUrl = (url && typeof url === 'string') ? url : 'https://placeholder.supabase.co';
+    const supabaseAnonKey = (key && typeof key === 'string') ? key : 'placeholder-key';
 
-    supabaseClient = createClient(url, key, {
-      realtime: {
-        params: {
-          eventsPerSecond: 10,
+    try {
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+        realtime: {
+          params: {
+            eventsPerSecond: 10,
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      console.error('Error creating Supabase client:', error);
+      // Return a dummy client to allow page rendering
+      supabaseClient = createClient('https://placeholder.supabase.co', 'placeholder-key');
+    }
   }
 
   return supabaseClient;
@@ -35,8 +46,13 @@ export const getSupabaseClient = (): SupabaseClient => {
 // Export default for convenience - will use lazy initialization
 export const supabase = new Proxy({} as SupabaseClient, {
   get: (target, prop) => {
-    const client = getSupabaseClient();
-    return (client as any)[prop];
+    try {
+      const client = getSupabaseClient();
+      return (client as any)[prop];
+    } catch (error) {
+      console.error('Error accessing Supabase:', error);
+      return undefined;
+    }
   },
 }) as SupabaseClient;
 
