@@ -1,17 +1,22 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Get environment variables
+// Validate and get environment variables as strings
 const getSupabaseCredentials = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  return { url, key };
+  // Only return if both are valid strings
+  if (typeof url === 'string' && typeof key === 'string' && url && key) {
+    return { url, key, isValid: true };
+  }
+
+  return { url: '', key: '', isValid: false };
 };
 
 // Check if credentials are properly configured
 export const isSupabaseConfigured = () => {
-  const { url, key } = getSupabaseCredentials();
-  return !!(url && key && typeof url === 'string' && typeof key === 'string');
+  const { isValid } = getSupabaseCredentials();
+  return isValid;
 };
 
 let supabaseClient: SupabaseClient | null = null;
@@ -19,11 +24,11 @@ let supabaseClient: SupabaseClient | null = null;
 // Lazy initialize client only when credentials are available
 export const getSupabaseClient = (): SupabaseClient => {
   if (!supabaseClient) {
-    const { url, key } = getSupabaseCredentials();
+    const { url, key, isValid } = getSupabaseCredentials();
 
-    // Use credentials if available, otherwise use placeholders for build
-    const supabaseUrl = (url && typeof url === 'string') ? url : 'https://placeholder.supabase.co';
-    const supabaseAnonKey = (key && typeof key === 'string') ? key : 'placeholder-key';
+    // If credentials are valid, use them; otherwise use safe placeholders
+    const supabaseUrl = isValid ? url : 'https://placeholder.supabase.co';
+    const supabaseAnonKey = isValid ? key : 'pk_placeholder_key_for_build';
 
     try {
       supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
@@ -35,8 +40,11 @@ export const getSupabaseClient = (): SupabaseClient => {
       });
     } catch (error) {
       console.error('Error creating Supabase client:', error);
-      // Return a dummy client to allow page rendering
-      supabaseClient = createClient('https://placeholder.supabase.co', 'placeholder-key');
+      // Create with placeholder values if there's an error
+      supabaseClient = createClient(
+        'https://placeholder.supabase.co',
+        'pk_placeholder_key_for_build'
+      );
     }
   }
 
