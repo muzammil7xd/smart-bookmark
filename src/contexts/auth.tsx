@@ -74,10 +74,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Supabase is not configured. Please add environment variables.');
       }
 
+      // Use the actual origin from the browser
+      let redirectUrl = '/auth/callback';
+      if (typeof window !== 'undefined') {
+        // Get the full URL including protocol and domain
+        redirectUrl = `${window.location.origin}/auth/callback`;
+      }
+
+      console.log('Redirect URL:', redirectUrl);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
+          redirectTo: redirectUrl,
         },
       });
 
